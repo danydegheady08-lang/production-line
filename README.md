@@ -60,6 +60,7 @@ Settings at the top of `producer.py`:
 - `WEIGHTS`: probability of Productive, Standby and Unscheduled Downtime per second.
 - `COUPLE_TEMPERATURE`: `False` is the lecture behaviour (temperature ignores the state), `True` lets a
   stopped machine cool towards 35 degrees.
+- `VIBRATION_BY_STATE`: the extra variable `vibration` (mm/s), high while Productive and near zero when stopped.
 - `python producer.py --dry-run` prints values without writing to InfluxDB.
 
 Results from my run (details in the homework document): longest Unscheduled Downtime 2 seconds,

@@ -5,6 +5,7 @@ Test without a database:   python producer.py --dry-run
 
 Exercise 5.2 : change WEIGHTS to [0.50, 0.20, 0.30] and run it again.
 Exercise 5.2 : set COUPLE_TEMPERATURE = True to let a stopped machine cool down.
+Week 5 extra variable : the field "vibration" (mm/s) follows the machine state.
 """
 import sys
 import time, math, random
@@ -20,6 +21,9 @@ BUCKET = "factory"
 LINE = "A"
 WEIGHTS = [0.85, 0.10, 0.05]          # Productive, Standby, Unscheduled Downtime
 COUPLE_TEMPERATURE = False            # lecture code: temperature ignores the state
+
+# Extra variable: vibration in mm/s. A running machine shakes, a stopped one does not.
+VIBRATION_BY_STATE = {"Productive": 2.5, "Standby": 0.4, "Unscheduled Downtime": 0.1}
 
 if not DRY_RUN:
     from influxdb_client import InfluxDBClient, Point
@@ -45,6 +49,8 @@ try:
         else:
             temperature = 60 + 5 * math.sin(t / 10) + random.uniform(-0.3, 0.3)
 
+        vibration = max(0.0, VIBRATION_BY_STATE[state] + random.uniform(-0.2, 0.2))
+
         if random.random() < 0.4:
             parts_total += 1
 
@@ -54,11 +60,12 @@ try:
                 .tag("line", LINE)
                 .field("temperature", temperature)
                 .field("parts_total", parts_total)
+                .field("vibration", vibration)
                 .field("state", state)
                 .time(datetime.now(timezone.utc))
             )
             write.write(bucket=BUCKET, record=point)
-        print(f"t={t:4d}   T={temperature:5.2f}   parts={parts_total}   state={state}")
+        print(f"t={t:4d}   T={temperature:5.2f}   vib={vibration:4.2f}   parts={parts_total}   state={state}")
         t += 1
         time.sleep(0.05 if DRY_RUN else 1)
 except KeyboardInterrupt:
